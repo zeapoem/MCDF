@@ -1,0 +1,72 @@
+module flag_gen (
+    clk,
+    rst_n,
+    wr_en,
+    rd_en,
+    full,
+    empty,
+    slack);
+
+    parameter PTR_WIDE = 2'b11;    //d3
+    parameter MAX_CNT = 3'b111;    //d7 
+
+    input clk;
+    input rst_n;
+    input wr_en;
+    input rd_en;
+
+    output full;
+    output empty;
+    output slack;
+
+    wire clk;
+    wire rst_n;
+    wire wr_en;
+    wire rd_en;
+
+    reg full;
+    reg empty;
+
+    reg [PTR_WIDE-1 : 0] count;   //counter
+    reg [PTR_WIDE-1 : 0] slack;
+
+    assign slack = MAX_CNT - count;
+
+    always @ (posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            count <= 0;
+        else begin
+            case ( {wr_en , rd_en} )
+                2'b00 : count <= count;
+                2'b01 : begin
+                    if (count !== 0)
+                        count <= count - 1;
+                    else count <= count;
+                end
+                2'b10 : begin
+                    if (count !== MAX_CNT)
+                        count <= count + 1;
+                    else count <= count;
+                end
+                2'b11 : count <= count;
+                default count <= 0;
+            endcase
+         end
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (count == MAX_CNT) begin 
+            full <= 1;
+            empty <= 0;
+        end
+        else if (count == 0) begin
+            full <= 0;
+            empty <= 1;
+        end                 
+        else begin
+            full <= 0;
+            empty <= 0;
+        end
+     end
+
+endmodule 

@@ -1,0 +1,94 @@
+module fifo_top (
+    clk,
+    rst_n,
+    wr_en,
+    rd_en,
+    data_in,
+    data_out,
+    full,
+    empty,
+    fifo_slack);
+    
+    parameter FIFO_DEPTH = 4'b1000;    //depth is 8
+    parameter FIFO_WIDE = 5'b10_0000;    //data wide is 32
+    parameter PTR_WIDE = 1'd3;
+    parameter MAX_CNT = 3'b111;    //d7 input clk;
+
+    
+    input clk;
+    input rst_n;
+    input wr_en;
+    input rd_en;
+    input data_in;
+
+    output data_out;
+    output full;
+    output empty;
+    output fifo_slack;
+
+    wire clk;
+    wire rst_n;
+    wire wr_en;
+    wire rd_en;
+    wire [FIFO_WIDE-1 : 0] data_in;
+    reg [FIFO_WIDE-1 : 0] data_out;
+    wire full;
+    wire empty;
+    wire [PTR_WIDE-1 : 0] fifo_slack;
+    reg [PTR_WIDE-1 : 0] wr_addr;
+    reg [PTR_WIDE-1 : 0] rd_addr;
+
+  
+
+     
+    ram  #(
+    	.FIFO_DEPTH(FIFO_DEPTH),
+    	.FIFO_WIDE(FIFO_WIDE),
+    	.PTR_WIDE(PTR_WIDE))
+    ram_u (
+        .clk(clk),
+        .rd_en(rd_en),
+        .wr_en(wr_en),
+        .wr_addr(wr_addr),    //write pointer
+        .rd_addr(rd_addr),    //read  pointer
+        .data_in(data_in),
+        .data_out(data_out));
+
+    wr_addr_gen #(
+        .PTR_WIDE(PTR_WIDE))
+    wr_addr_gen_u (
+        .clk(clk),
+        .rst_n(rst_n),
+        .full(full),
+        .wr_en(wr_en),
+        .wr_addr(wr_addr));
+
+    rd_addr_gen #(
+        .PTR_WIDE(PTR_WIDE))
+    rd_addr_gen_u (
+        .clk(clk),
+        .rst_n(rst_n),
+        .empty(empty),
+        .rd_en(rd_en),
+        .rd_addr(rd_addr));
+
+    flag_gen #(
+    	.PTR_WIDE(PTR_WIDE),
+    	.MAX_CNT(MAX_CNT))
+    flag_gen_u (
+    	.clk(clk),
+    	.rst_n(rst_n),
+    	.wr_en(wr_en),
+    	.rd_en(rd_en),
+    	.full(full),
+    	.empty(empty),
+    	.fifo_slack(slack));
+
+endmodule
+
+
+
+
+
+
+
